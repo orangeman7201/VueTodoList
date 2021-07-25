@@ -12,40 +12,20 @@
         <th>状態</th>
       </tr>
       </thead>
-      <thead v-if="radioState === 'all'">
-      <tr v-for="(todo, index) in inputTodos" :key="todo.task">
-        <td>{{index}}</td>
-        <td>{{todo.task}}</td>
-        <td>
-          <button v-if="inputTodos[index].state === 'working'" @click="changeState(index)">作業中</button>
-          <button v-else @click="changeState(index)">完了</button>
-        </td>
-        <td><button @click="deleteItem(index)">削除</button></td>
-      </tr>
-      </thead>
-      <thead v-if="radioState === 'working'">
-      <tr v-for="(todo, index) in inputTodos" :key="todo.task">
-        <td v-if="todo.state === 'working'">{{index}}</td>
-        <td v-if="todo.state === 'working'">{{todo.task}}</td>
-        <td v-if="todo.state === 'working'">
-          <button v-if="inputTodos[index].state === 'working'" @click="changeState(index)">作業中</button>
-          <button v-else @click="changeState(index)">完了</button>
-        </td>
-        <td v-if="todo.state === 'working'"><button @click="deleteItem(index)">削除</button></td>
-      </tr>
-      </thead>
-      <thead v-if="radioState === 'finish'">
-      <tr v-for="(todo, index) in inputTodos" :key="todo.task">
-        <td v-if="todo.state === 'finish'">{{index}}</td>
-        <td v-if="todo.state === 'finish'">{{todo.task}}</td>
-        <td v-if="todo.state === 'finish'">
-          <button v-if="inputTodos[index].state === 'working'" @click="changeState(index)">作業中</button>
-          <button v-else @click="changeState(index)">完了</button>
-        </td>
-        <td  v-if="todo.state === 'finish'"><button @click="deleteItem(index)">削除</button></td>
-      </tr>
+
+      <thead>
+        <tr v-for="todo in showInputTodos" :key="todo.task">
+          <td>{{todo.id}}</td>
+          <td>{{todo.task}}</td>
+          <td>
+            <button v-if="unshowInputTodos[todo.id].state === 'working'" @click="changeState(todo.id)">作業中</button>
+            <button v-else @click="changeState(todo.id)">完了</button>
+          </td>
+          <td><button @click="deleteItem(todo.id); updateId()">削除</button></td>
+        </tr>
       </thead>
     </table>
+
     <form @submit.prevent="addTodo">
       <input type="text" v-model="newTodo">
       <input type="submit" value="追加">
@@ -59,30 +39,45 @@
       return {
         newTodo: '',
         radioState: 'all',
-        start: 'ture'
       }
     },
     computed: {
-      inputTodos() {
-      return this.$store.getters.inputTodos;
+      unshowInputTodos:function() {
+        return this.$store.getters.inputTodos;
+      },
+      showInputTodos:function() {
+        const self = this;
+        if(self.radioState === 'all') {
+          return self.$store.getters.inputTodos;
+        } else if (self.radioState === "working") {
+          return self.$store.getters.inputTodos.filter(todo => todo.state === 'working' )
+        } else {
+          return self.$store.getters.inputTodos.filter(todo => todo.state === 'finish' )
+        } 
       },
     },
     methods: {
       addTodo: function() {
-        let Item = {task: this.newTodo, state: "working"}
-        this.inputTodos.push(Item);
+        const Item = {id: '',task: this.newTodo, state: 'working'}
+        this.unshowInputTodos.push(Item);
         this.newTodo = '';
+        this.updateId();
       },
       deleteItem: function(index) {
-        this.inputTodos.splice(index,1)
+        this.unshowInputTodos.splice(index,1)
       },
       changeState: function(index) {
-        if (this.inputTodos[index].state === 'working') {
-          this.inputTodos[index].state = 'finish'
-        } else if (this.inputTodos[index].state === 'finish') {
-          this.inputTodos[index].state = 'working'
+        if (this.unshowInputTodos[index].state === 'working') {
+          this.unshowInputTodos[index].state = 'finish'
+        } else if (this.unshowInputTodos[index].state === 'finish') {
+          this.unshowInputTodos[index].state = 'working'
         }
-      }
-    }
+      },
+      updateId: function() {
+        for(let idNum = 0; idNum < this.unshowInputTodos.length; idNum++) {
+          this.unshowInputTodos[idNum].id = idNum;
+        }
+      },
+    },
   }
 </script>
